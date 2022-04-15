@@ -17,10 +17,18 @@ class Graph
     list<int> *adj; // Pointer to an array containing adjacency lists
     bool isCyclicUtil(int v, bool visited[], bool *rs); // used by isCyclic()
 public:
+    Graph(bool isEmpty);
     Graph(int V); // Constructor
+    Graph(const Graph& old);
+    void setList(int v);
     void addEdge(int v, int w); // to add an edge to graph
+    bool removeEdge(int v, int w); // to add an edge to graph
     bool isCyclic(); // returns true if there is a cycle in this graph
 };
+
+Graph::Graph(bool isEmpty) {
+//    printf("Created graph class");
+}
 
 Graph::Graph(int V)
 {
@@ -28,9 +36,28 @@ Graph::Graph(int V)
     adj = new list<int>[V];
 }
 
+Graph::Graph(const Graph& old) {
+    Graph copy(old.V);
+    copy.adj = adj;
+}
+
+void Graph::setList(int v) {
+    this->V = v;
+    adj = new list<int>[V];
+}
+
 void Graph::addEdge(int v, int w)
 {
     adj[v].push_back(w); // Add w to v’s list.
+}
+
+bool Graph::removeEdge(int v, int w) {
+    size_t sz = adj[v].size();
+    adj[v].remove(w); // remove edge from adjacency list
+    if (adj[v].size() < sz) {
+        return true;
+    }
+    return false;
 }
 
 // This function is a variation of DFSUtil() in https://www.geeksforgeeks.org/archives/18212
