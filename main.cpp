@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <math.h>
+#include <list>
 
 int NUM_THREADS, NUM_RESOURCES;
 int MAX_LINE_LEN = 25, MAX_RESOURCE_REQ = 50;
@@ -13,32 +14,65 @@ int** resources_req;
 int* finishedList;
 
 pthread_mutex_t lockRequest;
-pthread_mutex_t lockRelease;
+pthread_mutex_t printLock;
+pthread_mutex_t randProtect;
 
 bool isEmpty = 1;
-Graph rag(isEmpty);
+Graph* rag;
 
 
-bool request(char* player, int dest, int src) {
+bool request(char* player, int thread, int resource) {
     pthread_mutex_lock(&lockRequest);
-    rag.addEdge(src, dest);
-    bool cycle = rag.isCyclic();
-    bool removed = rag.removeEdge(src, dest);
-    pthread_mutex_unlock(&lockRequest);
-    if (cycle) {
-        printf("Cycle detected. Reject\n");
-        return false;
-    } else {
-        printf("No cycle, approve request\n");
-        return true;
+    // check if resource vertex already exists
+    printf("Person %s requests %d\n", player, resource);
+    bool vertexExists = rag->vertexExists(resource);
+    if (vertexExists) {
+        // if exists then only add edge to process vertex if no cycle would form
+        rag->addClaimEdge(thread, resource);
+        bool cycle = rag->isCyclic();
+        if (cycle) {
+            bool removed = rag->removeEdge(thread, resource);
+            printf("Person %s requests %d: denied\n", player, resource);
+        }
+        else {
+            printf("Person %s requests %d: accepted\n", player, resource);
+        }
     }
+    else {
+        // if resource vertex DNE and no cycle occurs than add resource vertex edge
+        rag->addEdge(resource, thread);
+    }
+
+    pthread_mutex_lock(&printLock);
+//    printf("Person %s requests %d\n", player, resource);
+
+//    if (cycle) {
+//        bool removed = rag->removeEdge(resource, thread);
+//        printf("Person %s requests %d: denied\n", player, resource);
+//    }
+//    else {
+//        printf("Person %s requests %d: accepted\n", player, resource);
+//    }
+    pthread_mutex_unlock(&printLock);
+    pthread_mutex_unlock(&lockRequest);
+
+    return !cycle;
 }
 
-bool release(char* player, int src, int dest) {
-    pthread_mutex_lock(&lockRelease);
-    bool removed = rag.removeEdge(src, dest);
-    pthread_mutex_unlock(&lockRelease);
-    return removed;
+bool release(char* player, int requester, int resource) {
+    pthread_mutex_lock(&lockRequest);
+    pthread_mutex_lock(&printLock);
+
+//    bool removed = rag->removeEdge(resource, requester);
+    if (resource < 0) {
+        resource *= -1;
+    }
+    rag->releaseResourceVertex(resource, requester);
+
+    printf("Person %s releases %d\n", player, resource);
+    pthread_mutex_unlock(&printLock);
+    pthread_mutex_unlock(&lockRequest);
+    return 0;
 }
 
 void* runner(void* v) {
@@ -48,39 +82,52 @@ void* runner(void* v) {
     while(!finishedList[index]) {
         int i = 0;
         while (i < num_resources_req[index]) {
-            int r = rand() % 100;
-            long ns = r * pow(10, 7);
-            if (resources_req[index][i] > 0) {
+            pthread_mutex_lock(&randProtect);
+            long r = rand() % 100;
+            pthread_mutex_unlock(&randProtect);
+
+            long ns = r * pow(10, 7); // 10**9 / 100 == 10**7
+            if (resources_req[index][i] >= 0) {
                 // request resource
                 bool granted = request(players[index], index, resources_req[index][i]);
                 if (granted) {
-                    rag.addEdge(index, resources_req[index][i]);
                     // increment counter to request next resource in list on next iteration
                     i++;
-
                     struct timespec remaining, request = {1, ns};
                     nanosleep(&request, &remaining);
-                    printf("Waiting 1 + q/100 seconds until next request");
                 }
                 else {
                     struct timespec remaining, request = {0, ns};
                     nanosleep(&request, &remaining);
-
-//                    print("Waiting q/100 seconds until next request");
                 }
             }
             else {
                 // release resource
                 bool removed = release(players[index], index, resources_req[index][i]);
-//                bool removed = rag.removeEdge(index, resources_req[index][i]);
                 if (removed) {
-                    printf("Successfully removed from adjList");
+                    printf("Successfully removed from adjList\n");
                 }
                 else {
                     printf("Item DNE and was not removed");
                 }
+                i++;
+            }
+
+        }
+        pthread_mutex_lock(&randProtect);
+        long r = rand() % 100;
+        pthread_mutex_unlock(&randProtect);
+        long ns = r * pow(10, 7); // 10**9 / 100 == 10**7
+        struct timespec remaining, request = {1, ns};
+        nanosleep(&request, &remaining);
+
+        for (int c = 0; c < NUM_RESOURCES; c++) {
+            if (resources_req[index][c] > 0 && rag->edgeExists(index, resources_req[index][c])) {
+                // release all resources that thread INDEX is using
+                release(players[index], index, resources_req[index][c]);
             }
         }
+
         finishedList[index] = 1;
     }
 
@@ -105,9 +152,11 @@ int main(int argc, char** argv) {
     finishedList = (int*)malloc(sizeof(int)*NUM_THREADS);
 
     pthread_mutex_init(&lockRequest, NULL);
-    pthread_mutex_init(&lockRelease, NULL);
+    pthread_mutex_init(&randProtect, NULL);
+    pthread_mutex_init(&printLock, NULL);
 
-    rag.setList(NUM_RESOURCES);
+//    rag.setList(NUM_RESOURCES);
+    rag = new Graph(NUM_RESOURCES);
     
     for (int i = 0; i < NUM_THREADS; i++) {
         //create global storage for players names and resource requests
@@ -125,7 +174,7 @@ int main(int argc, char** argv) {
         printf("\n");
     }
 
-    pthread_t tid[NUM_THREADS]; //make this an array of size numThreads
+    pthread_t tid[NUM_THREADS];
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -136,22 +185,6 @@ int main(int argc, char** argv) {
 
 
     // join threads at end
-
-
-
-    // Create a graph given in the above diagram
-//    Graph g(4);
-//    rag.addEdge(0, 1);
-//    rag.addEdge(0, 2);
-//    rag.addEdge(1, 2);
-//    g.addEdge(2, 3);
-//    g.addEdge(2, 3);
-//    g.addEdge(3, 3);
-
-//    if(rag.isCyclic())
-//        cout << "Graph contains cycle";
-//    else
-//        cout << "Graph doesn't contain cycle";
 
     while(true) {
         bool allTrue = true;
