@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <stdlib.h>
+
 
 using namespace std;
 
@@ -19,19 +21,18 @@ class Graph
 {
     int V; // No. of vertices
     bool isCyclicUtil(string &v, map<string, bool> &visited, map<string, bool> &recStack);
-//    list<int> *adj; // Pointer to an array containing adjacency lists
-//    bool isCyclicUtil(int v, bool visited[], bool *rs); // used by isCyclic()
     map<string, list<string>> graph;
     pthread_mutex_t lockRelease;
 public:
     Graph(bool isEmpty);
     Graph(int V); // Constructor
-    void addEdge(int v, int w); // to add an edge to graph
-    bool removeEdge(int v, int w); // to add an edge to graph
-    bool edgeExists(int idx, int resource) ;
-    void addClaimEdge(int thread, int resource);
-    bool vertexExists(int resource) ;
-    bool releaseResourceVertex(int v, int w);
+    void addEdge(string v, string w); // to add an edge to graph
+    bool removeEdge(string v, string w); // to add an edge to graph
+    bool edgeExists(string idx, string resource) ;
+    void addClaimEdge(string thread, string resource);
+    bool vertexExists(string resource) ;
+    bool releaseResourceVertex(string v, string w);
+    bool updateGraph(string resource);
     bool isCyclic(); // returns true if there is a cycle in this graph
     char* printGraph();
 };
@@ -43,76 +44,81 @@ Graph::Graph(bool isEmpty) {
 Graph::Graph(int V)
 {
     this->V = V;
-//    adj = new list<int>[V];
     pthread_mutex_init(&lockRelease, NULL);
 
 }
 
-bool Graph::edgeExists(int idx, int resource) {
+bool Graph::edgeExists(string idx, string resource) {
 // check what resources are being used by this thread and return
 // let returned function call free resource on those
-    bool found = (find(graph[to_string(idx)].begin(), graph[to_string(idx)].end(), to_string(resource)) != graph[to_string(idx)].end());
+    bool found = (find(graph[idx].begin(), graph[idx].end(), resource) != graph[idx].end());
     return found;
 }
 
-bool Graph::vertexExists(int resource) {
+bool Graph::vertexExists(string resource) {
 // check what resources are being used by this thread and return
 // let returned function call free resource on those
     for (auto v: graph) {
-        if (v.first == to_string(resource)) {
+        if (v.first == resource) {
             return true;
         }
     }
     return false;
 }
 
-void Graph::addEdge(int v, int w)
+void Graph::addEdge(string v, string w)
 {
     pthread_mutex_lock(&lockRelease);
     // if not causing a cycle or if resource vertex dne then add
     // graph class add vertex
-    graph[to_string(v)].push_back(to_string(w));
-//    adj[v-1].push_back(w); // Add w to v’s list.
+    graph[v].push_back(w);
     pthread_mutex_unlock(&lockRelease);
 }
 
-void Graph::addClaimEdge(int thread, int resource) {
+void Graph::addClaimEdge(string thread, string resource) {
     // add claim edge. Key is thread and value is list of all resources it is requesting that have not yet been turned into resource edge
     pthread_mutex_lock(&lockRelease);
-    graph[to_string(thread)].push_back(to_string(resource));
+    graph[thread].push_back(resource);
     pthread_mutex_unlock(&lockRelease);
-
 }
 
 
-bool Graph::removeEdge(int v, int w) {
+bool Graph::removeEdge(string v, string w) {
     pthread_mutex_lock(&lockRelease);
-    v = abs(v);
     // remove edge that was for cycle detection
-    size_t sz = graph[to_string(v)].size();
-    graph[to_string(v)].remove(to_string(w));
+    size_t sz = graph[v].size();
+    graph[v].remove(w);
     pthread_mutex_unlock(&lockRelease);
 
     // or if removing resource vertex then delete that element of the map
-    if (graph[to_string(v)].size() < sz) {
+    if (graph[v].size() < sz) {
         return true;
     }
     return false;
 
-//    sz = adj[idx-1].size();
-//    adj[idx-1].remove(w); // remove edge from adjacency list
-//    if (adj[idx-1].size() < sz) {
-//        return true;
-//    }
-//    return false;
+
 }
 
-bool Graph::releaseResourceVertex(int v, int w) {
+bool Graph::releaseResourceVertex(string v, string w) {
     // delete graph[v] if resource is being released
     pthread_mutex_lock(&lockRelease);
-    size_t deleted = graph.erase(to_string(v));
+    size_t deleted = graph.erase(v);
     pthread_mutex_unlock(&lockRelease);
     return deleted;
+}
+
+bool Graph::updateGraph(string resource) {
+    // loop through entire graph and see if just removed resource is being requested by another thread at ll and if so create the new vertex
+    for (auto & line: graph) {
+        for (auto & req: line.second) {
+            if (resource == req) {
+                removeEdge(line.first, req);
+                addEdge(req,line.first);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 // This function is a variation of DFSUtil() in https://www.geeksforgeeks.org/archives/18212
@@ -125,7 +131,7 @@ bool Graph::isCyclicUtil(string &v, map<string, bool> &visited, map<string, bool
         recStack[v] = true;
 
         // Recur for all the vertices adjacent to this vertex
-        for(auto it: graph[v]) {
+        for(auto &it: graph[v]) {
             if ( !visited[it] && isCyclicUtil(it, visited, recStack) )
                 return true;
             else if (recStack[it])
@@ -168,16 +174,41 @@ bool Graph::isCyclic()
             return true;
         i++;
     }
-    // for element in outer list?? (NOT index)
-//    int i = 0;
-//    for (const auto &pair: graph) {
-//        if ( !visited[i] && isCyclicUtil(i, pair.second, visited, recStack))
-//            return true;
-//        i++;
-//    }
-//    for(int i = 0; i < sz; i++)
 
     return false;
+}
+
+char* Graph::printGraph() {
+    // how the fuck do I print this thing
+    char r2t[1000] = "Resource to Thread ";
+    char t2r[1000] = "Thread to Resources ";
+    for (auto &v : graph)  {
+        try {
+            int res = stoi(v.first);
+            sprintf(r2t, "%s : (%s, %s) ", r2t, v.first.c_str(), v.second.front().c_str());
+            if (v.second.front().c_str() == " " || v.second.front()=="") {
+                printf("here");
+            }
+        }
+        catch (exception & e) {
+//            printf("Not an int");
+            for (int i = 0; i <= V; i++) {
+                if (find(v.second.begin(), v.second.end(), to_string(i)) != v.second.end()) {
+                    sprintf(t2r, "%s : (%s, %s) ", t2r, v.first.c_str(), to_string(i).c_str());
+
+                }
+            }
+
+        }
+
+    }
+    sprintf(r2t, "%s \n", r2t);
+//    printf(r2t);
+    sprintf(t2r, "%s \n", t2r);
+//    printf(t2r);
+    char bigT[2000] = "";
+    sprintf(bigT, "%s %s", r2t, t2r);
+    return bigT;
 }
 
 
