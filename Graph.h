@@ -18,8 +18,9 @@ using namespace std;
 class Graph
 {
     int V; // No. of vertices
+    bool isCyclicUtil(string &v, map<string, bool> &visited, map<string, bool> &recStack);
 //    list<int> *adj; // Pointer to an array containing adjacency lists
-    bool isCyclicUtil(int v, bool visited[], bool *rs); // used by isCyclic()
+//    bool isCyclicUtil(int v, bool visited[], bool *rs); // used by isCyclic()
     map<string, list<string>> graph;
     pthread_mutex_t lockRelease;
 public:
@@ -30,7 +31,7 @@ public:
     bool edgeExists(int idx, int resource) ;
     void addClaimEdge(int thread, int resource);
     bool vertexExists(int resource) ;
-    void releaseResourceVertex(int v, int w);
+    bool releaseResourceVertex(int v, int w);
     bool isCyclic(); // returns true if there is a cycle in this graph
     char* printGraph();
 };
@@ -50,20 +51,19 @@ Graph::Graph(int V)
 bool Graph::edgeExists(int idx, int resource) {
 // check what resources are being used by this thread and return
 // let returned function call free resource on those
-//    bool found = (find(adj[resource-1].begin(), adj[resource-1].end(), idx) != adj[resource-1].end());
-    bool found = (find(graph.begin(), graph.end(), resource) != graph.end());
-    if (found) {
-        found = (find(graph[str(resource)].begin(), graph[str(resource)].end(), str(idx)) != graph[str(resource)].end());
-    }
+    bool found = (find(graph[to_string(idx)].begin(), graph[to_string(idx)].end(), to_string(resource)) != graph[to_string(idx)].end());
     return found;
 }
 
 bool Graph::vertexExists(int resource) {
 // check what resources are being used by this thread and return
 // let returned function call free resource on those
-//    bool found = (find(adj[resource-1].begin(), adj[resource-1].end(), idx) != adj[resource-1].end());
-    bool found = (find(graph.begin(), graph.end(), str(resource)) != graph.end());
-    return found;
+    for (auto v: graph) {
+        if (v.first == to_string(resource)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Graph::addEdge(int v, int w)
@@ -71,14 +71,17 @@ void Graph::addEdge(int v, int w)
     pthread_mutex_lock(&lockRelease);
     // if not causing a cycle or if resource vertex dne then add
     // graph class add vertex
-    graph[str(v)].push_back(str(w));
+    graph[to_string(v)].push_back(to_string(w));
 //    adj[v-1].push_back(w); // Add w to v’s list.
     pthread_mutex_unlock(&lockRelease);
 }
 
 void Graph::addClaimEdge(int thread, int resource) {
     // add claim edge. Key is thread and value is list of all resources it is requesting that have not yet been turned into resource edge
-    graph[str(thread)].push_back(str(resource));
+    pthread_mutex_lock(&lockRelease);
+    graph[to_string(thread)].push_back(to_string(resource));
+    pthread_mutex_unlock(&lockRelease);
+
 }
 
 
@@ -86,47 +89,48 @@ bool Graph::removeEdge(int v, int w) {
     pthread_mutex_lock(&lockRelease);
     v = abs(v);
     // remove edge that was for cycle detection
-    size_t sz = graph[str(v)].size();
-    graph[str(v)].remove(str(w));
+    size_t sz = graph[to_string(v)].size();
+    graph[to_string(v)].remove(to_string(w));
+    pthread_mutex_unlock(&lockRelease);
+
     // or if removing resource vertex then delete that element of the map
-    if (graph[str(v)].size() < sz) {
+    if (graph[to_string(v)].size() < sz) {
         return true;
     }
     return false;
+
 //    sz = adj[idx-1].size();
 //    adj[idx-1].remove(w); // remove edge from adjacency list
-//    pthread_mutex_unlock(&lockRelease);
 //    if (adj[idx-1].size() < sz) {
 //        return true;
 //    }
 //    return false;
 }
 
-void Graph::releaseResourceVertex(int v, int w) {
+bool Graph::releaseResourceVertex(int v, int w) {
     // delete graph[v] if resource is being released
-    auto it = find(graph.begin(), graph.end(), v);
-    graph.erase(it);
+    pthread_mutex_lock(&lockRelease);
+    size_t deleted = graph.erase(to_string(v));
+    pthread_mutex_unlock(&lockRelease);
+    return deleted;
 }
 
 // This function is a variation of DFSUtil() in https://www.geeksforgeeks.org/archives/18212
-bool Graph::isCyclicUtil(int v, bool visited[], bool *recStack)
+bool Graph::isCyclicUtil(string &v, map<string, bool> &visited, map<string, bool> &recStack)
 {
-    if(visited[v] == false)
+    if(!visited[v])
     {
         // Mark the current node as visited and part of recursion stack
         visited[v] = true;
         recStack[v] = true;
 
         // Recur for all the vertices adjacent to this vertex
-        list<int>::iterator i;
-        for(i = adj[v].begin(); i != adj[v].end(); ++i)
-        {
-            if ( !visited[*i] && isCyclicUtil(*i, visited, recStack) )
+        for(auto it: graph[v]) {
+            if ( !visited[it] && isCyclicUtil(it, visited, recStack) )
                 return true;
-            else if (recStack[*i])
+            else if (recStack[it])
                 return true;
         }
-
     }
     recStack[v] = false; // remove the vertex from recursion stack
     return false;
@@ -141,21 +145,37 @@ bool Graph::isCyclic()
 {
     // Mark all the vertices as not visited and not part of recursion stack
     size_t sz = graph.size();
-    bool *visited = new bool[sz];
-    bool *recStack = new bool[sz];
-    for(int i = 0; i < sz; i++)
-    {
-        visited[i] = false;
-        recStack[i] = false;
+//    bool *visited = new bool[sz];
+//    bool *recStack = new bool[sz];
+    map<string, bool> vis ;
+    map<string, bool> rec ;
+//    int i = 0;
+    for (const auto &pair: graph) {
+        vis[pair.first] = false;
+        rec[pair.first] = false;
     }
+//    for(int i = 0; i < sz; i++)
+//    {
+//        visited[i] = false;
+//        recStack[i] = false;
+//    }
 
     // Call the recursive helper function to detect cycle in different
     // DFS trees
-
-    // for element in outer list?? (NOT index)
-    for(int i = 0; i < sz; i++)
-        if ( !visited[i] && isCyclicUtil(i, visited, recStack))
+    int i = 0;
+    for (auto &pair: graph) {
+        if ( !vis[pair.first] && isCyclicUtil(const_cast<string &>(pair.first), vis, rec))
             return true;
+        i++;
+    }
+    // for element in outer list?? (NOT index)
+//    int i = 0;
+//    for (const auto &pair: graph) {
+//        if ( !visited[i] && isCyclicUtil(i, pair.second, visited, recStack))
+//            return true;
+//        i++;
+//    }
+//    for(int i = 0; i < sz; i++)
 
     return false;
 }

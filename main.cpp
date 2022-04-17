@@ -23,13 +23,16 @@ Graph* rag;
 
 bool request(char* player, int thread, int resource) {
     pthread_mutex_lock(&lockRequest);
+    pthread_mutex_lock(&printLock);
     // check if resource vertex already exists
     printf("Person %s requests %d\n", player, resource);
     bool vertexExists = rag->vertexExists(resource);
+    bool c = false;
     if (vertexExists) {
         // if exists then only add edge to process vertex if no cycle would form
         rag->addClaimEdge(thread, resource);
         bool cycle = rag->isCyclic();
+        c = cycle;
         if (cycle) {
             bool removed = rag->removeEdge(thread, resource);
             printf("Person %s requests %d: denied\n", player, resource);
@@ -41,11 +44,10 @@ bool request(char* player, int thread, int resource) {
     else {
         // if resource vertex DNE and no cycle occurs than add resource vertex edge
         rag->addEdge(resource, thread);
+        printf("Person %s requests %d: accepted\n", player, resource);
     }
 
-    pthread_mutex_lock(&printLock);
 //    printf("Person %s requests %d\n", player, resource);
-
 //    if (cycle) {
 //        bool removed = rag->removeEdge(resource, thread);
 //        printf("Person %s requests %d: denied\n", player, resource);
@@ -53,10 +55,11 @@ bool request(char* player, int thread, int resource) {
 //    else {
 //        printf("Person %s requests %d: accepted\n", player, resource);
 //    }
+
     pthread_mutex_unlock(&printLock);
     pthread_mutex_unlock(&lockRequest);
 
-    return !cycle;
+    return !c;
 }
 
 bool release(char* player, int requester, int resource) {
@@ -67,12 +70,12 @@ bool release(char* player, int requester, int resource) {
     if (resource < 0) {
         resource *= -1;
     }
-    rag->releaseResourceVertex(resource, requester);
+    size_t sz = rag->releaseResourceVertex(resource, requester);
 
     printf("Person %s releases %d\n", player, resource);
     pthread_mutex_unlock(&printLock);
     pthread_mutex_unlock(&lockRequest);
-    return 0;
+    return sz;
 }
 
 void* runner(void* v) {
@@ -104,7 +107,7 @@ void* runner(void* v) {
             else {
                 // release resource
                 bool removed = release(players[index], index, resources_req[index][i]);
-                if (removed) {
+                if (removed != 0) {
                     printf("Successfully removed from adjList\n");
                 }
                 else {
