@@ -1,0 +1,137 @@
+P1 4: 4 2 1 3 
+P2 6: 3 -3 10 8 -10 4 
+P3 6: 7 4 3 -3 8 3 
+P4 5: 2 4 8 10 6 
+P5 7: 10 6 7 4 -6 -7 3 
+Thread 0 - player P1
+Person P1 requests 4
+Person P1 requests 4: accepted
+Resource to Thread  : (4, P1)  
+ Thread to Resources  
+Thread 2 - player P3
+Thread 3 - player P4
+Person P4 requests 2
+Person P4 requests 2: accepted
+Resource to Thread  : (2, P4)  : (4, P1)  
+ Thread to Resources  
+Person P3 requests 7
+Person P3 requests 7: accepted
+Thread 1 - player P2
+Thread 4 - player P5
+Resource to Thread  : (2, P4)  : (4, P1)  : (7, P3)  
+ Thread to Resources  
+Person P2 requests 3
+Person P2 requests 3: accepted
+Resource to Thread  : (2, P4)  : (3, P2)  : (4, P1)  : (7, P3)  
+ Thread to Resources  
+Person P5 requests 10
+Person P5 requests 10: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (3, P2)  : (4, P1)  : (7, P3)  
+ Thread to Resources  
+Person P1 requests 2
+Person P1 requests 2: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (3, P2)  : (4, P1)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  
+Person P5 requests 6
+Person P5 requests 6: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (3, P2)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  
+Person P3 requests 4
+Person P3 requests 4: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (3, P2)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  : (P3, 4)  
+Person P2 releases 3
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  : (P3, 4)  
+Person P2 requests 10
+Person P2 requests 10: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  
+Person P2 requests 8
+Person P2 requests 8: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  
+Person P5 requests 7
+Person P5 requests 7: accepted
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P1 requests 1
+Person P1 requests 1: accepted
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P3 requests 3
+Person P3 requests 3: accepted
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P1 requests 3
+Person P1 requests 3: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 7)  
+Person P5 requests 4
+Person P5 requests 4: accepted
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P1 requests 3
+Person P1 requests 3: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P3)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P3 releases 3
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P3 requests 8
+Person P3 requests 8: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P1 requests 3
+Person P1 requests 3: accepted
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P3 requests 8
+Person P3 requests 8: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (6, P5)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P5 releases 6
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P4 requests 4
+Person P4 requests 4: denied
+Resource to Thread  : (1, P1)  : (10, P5)  : (2, P4)  : (3, P1)  : (4, P1)  : (7, P3)  : (8, P2)  
+ Thread to Resources  : (P1, 2)  : (P2, 10)  : (P3, 4)  : (P5, 4)  : (P5, 7)  
+Person P3 requests 8
+Person P3 requests 8: denied

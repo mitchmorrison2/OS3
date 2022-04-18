@@ -114,6 +114,11 @@ bool Graph::updateGraph(string resource) {
             if (resource == req) {
                 removeEdge(line.first, req);
                 addEdge(req,line.first);
+                if (isCyclic()) {
+                    printf("Graph update causes a cycle. Rejecting new move");
+                    removeEdge(req, line.first);
+                    continue;
+                }
                 return true;
             }
         }
@@ -155,17 +160,10 @@ bool Graph::isCyclic()
 //    bool *recStack = new bool[sz];
     map<string, bool> vis ;
     map<string, bool> rec ;
-//    int i = 0;
     for (const auto &pair: graph) {
         vis[pair.first] = false;
         rec[pair.first] = false;
     }
-//    for(int i = 0; i < sz; i++)
-//    {
-//        visited[i] = false;
-//        recStack[i] = false;
-//    }
-
     // Call the recursive helper function to detect cycle in different
     // DFS trees
     int i = 0;
