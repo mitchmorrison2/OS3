@@ -23,48 +23,58 @@ Graph* rag;
 bool request(char* player, int thread, int resource) {
     pthread_mutex_lock(&lockRequest);
     pthread_mutex_lock(&printLock);
+
     // check if resource vertex already exists
-    printf("Person %s requests %d\n", player, resource);
     string person = string(player);
+    printf("Thread %s locked\n", person.c_str());
+    printf("Person %s requests %d\n", player, resource);
     string resourceStr = to_string(resource);
 
-    bool c = false;
+    bool granted = false;
     if (rag->vertexExists(resourceStr)) {
-        // if exists then only add edge to process vertex if no cycle would form
-        rag->addClaimEdge(person, resourceStr);
-        if (rag->isCyclic()) {
-            bool removed = rag->removeEdge(person, resourceStr);
-            printf("Person %s requests %d: denied\n", player, resource);
-            c = false;
-        }
-        else {
-            printf("Person %s requests %d: accepted\n", player, resource);
-            c = true;
-        }
+        // if resource vertex exists then only can update from claim to request if not cyclical
+        granted = false;
+//        if (rag->isCyclic()) {
+//            rag->changeEdgeType(person, resourceStr, 0); // make sure its a claim edge
+//        }
+//        else {
+//            rag->changeEdgeType(person, resourceStr, 1); // turn to request edge
+//        }
+        printf("Person %s requests %d: denied\n", player, resource);
     }
     else {
-        // if resource vertex DNE and no cycle occurs than add resource vertex edge
-        rag->addEdge(resourceStr, person);
-        // see why this if statement is causing the edge <person, resourceStr> to be added when only <resourceStr, person> should be added to the graph
-//        if (rag->isCyclic()) {
-//            rag->removeEdge(resourceStr, person);
-//        }
-//        rag->removeEdge(person, resourceStr);
-        c = true;
-        printf("Person %s requests %d: accepted\n", player, resource);
+        // if resource vertex DNE
+        // first remove the claim edge and create assignment edge
+        // if this causes a cycle
+            // revert to claim edge and reject request
+        // if no cycle
+            // keep allocated resource and return 1 because it was granted
+        rag->removeEdge(person, resourceStr);
+        rag->addEdge(resourceStr, person, 2); // edge type is allocation edge
+        if (rag->isCyclic()) {
+            granted = false;
+            rag->releaseResourceVertex(resourceStr);
+            rag->addClaimEdge(person, resourceStr, 0); //edge type is claim edge
+            printf("Person %s requests %d: denied\n", player, resource);
+        }
+        else {
+            granted = true;
+            printf("Person %s requests %d: accepted\n", player, resource);
+        }
     }
+
     char* p = rag->printGraph();
-    printf(p);
+    printf("%s", p);
 
     pthread_mutex_unlock(&printLock);
     pthread_mutex_unlock(&lockRequest);
 
-    return c;
+    printf("Thread %s unlocked\n", person.c_str());
+
+    return granted;
 }
 
 bool release(char* player, int requester, int resource) {
-    pthread_mutex_lock(&lockRequest);
-    pthread_mutex_lock(&printLock);
 
     if (resource < 0) {
         resource *= -1;
@@ -72,23 +82,28 @@ bool release(char* player, int requester, int resource) {
 
     string person = string(player);
     string resourceStr = to_string(resource);
+    printf("Thread %s locked\n", person.c_str());
 
-//    bool removed = rag->removeEdge(resource, player);
+    pthread_mutex_lock(&lockRequest);
+    pthread_mutex_lock(&printLock);
 
-    size_t sz = rag->releaseResourceVertex(resourceStr, player);
+    size_t sz = rag->releaseResourceVertex(resourceStr);
     // update graph to reallocate the resource that was just freed
     if (sz) {
         // if sz > 0 then the vertex was removed
         int resourceReallocated = rag->updateGraph(resourceStr);
-        if (resourceReallocated) {
-            printf("Reallocated resource %d\n", resource);
-        }
+//        if (resourceReallocated) {
+//            printf("Reallocated resource %d\n", resource);
+//        }
     }
+
     printf("Person %s releases %d\n", player, resource);
     char* p = rag->printGraph();
-    printf(p);
-    pthread_mutex_unlock(&printLock);
+    printf("%s", p);
+
+    printf("Thread %s unlocked\n", person.c_str());
     pthread_mutex_unlock(&lockRequest);
+    pthread_mutex_unlock(&printLock);
     return sz;
 }
 
@@ -146,7 +161,6 @@ void* runner(void* v) {
                 }
             }
             if (allHeld) {
-                printf("Thread %s finished and will next release all of its resources", players[index]);
                 break;
             }
         }
@@ -159,8 +173,6 @@ void* runner(void* v) {
         struct timespec remaining, request = {1, ns};
         nanosleep(&request, &remaining);
 
-        // remove edge function not removeResourceVertex for removing the thread and its corresponsing respources
-//        pthread_mutex_lock(&lockRequest);
         for (auto &v: resourcesToHold) {
             if (rag->edgeExists(to_string(v), players[index])) {
                 if (release(players[index], index, v)) {
@@ -168,13 +180,12 @@ void* runner(void* v) {
                 }
             }
         }
-//        pthread_mutex_unlock(&lockRequest);
 
         finishedList[index] = 1;
 
     }
 
-    pthread_exit(0);
+    pthread_exit(nullptr);
 
 }
 
@@ -194,11 +205,10 @@ int main(int argc, char** argv) {
     resources_req = (int**)malloc(sizeof(int*)*NUM_THREADS);
     finishedList = (int*)malloc(sizeof(int)*NUM_THREADS);
 
-    pthread_mutex_init(&lockRequest, NULL);
-    pthread_mutex_init(&randProtect, NULL);
-    pthread_mutex_init(&printLock, NULL);
+    pthread_mutex_init(&lockRequest, nullptr);
+    pthread_mutex_init(&randProtect, nullptr);
+    pthread_mutex_init(&printLock, nullptr);
 
-//    rag.setList(NUM_RESOURCES);
     rag = new Graph(NUM_RESOURCES);
     
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -212,10 +222,17 @@ int main(int argc, char** argv) {
         for (int c = 0; c < num_resources_req[i]; c++) {
             fscanf(fp, "%d ", &resources_req[i][c]);
             printf("%d ", resources_req[i][c]);
+            // initialize claim edges on graph
+            if (!rag->edgeExists(players[i], to_string(resources_req[i][c])) && resources_req[i][c] > 0)
+                rag->addClaimEdge(players[i], to_string(resources_req[i][c]));
         }
         fscanf(fp, "\n");
         printf("\n");
+
     }
+
+    char* stmt = rag->printGraph();
+    printf("%s", stmt);
 
     pthread_t tid[NUM_THREADS];
     pthread_attr_t attr;
@@ -226,8 +243,6 @@ int main(int argc, char** argv) {
         pthread_create(&(tid[i]), &attr, runner, (void*)x);
     }
 
-
-    // join threads at end
 
     while(true) {
         bool allTrue = true;
