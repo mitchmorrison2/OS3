@@ -231,7 +231,7 @@ char* Graph::printGraph() {
     sprintf(t2r, "%s\n", t2r);
     sprintf(req, "%s\n", req);
     char bigT[3000] = "";
-    sprintf(bigT, "%s %s %s", r2t, t2r, req);
+    sprintf(bigT, "%s%s%s", r2t, t2r, req);
     return bigT;
 }
 

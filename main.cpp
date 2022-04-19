@@ -74,7 +74,7 @@ bool request(char* player, int thread, int resource) {
     return granted;
 }
 
-bool release(char* player, int requester, int resource) {
+bool release(char* player, int requester, int resource, bool reqAgain) {
 
     if (resource < 0) {
         resource *= -1;
@@ -87,14 +87,17 @@ bool release(char* player, int requester, int resource) {
     pthread_mutex_lock(&lockRequest);
     pthread_mutex_lock(&printLock);
 
+
+
     size_t sz = rag->releaseResourceVertex(resourceStr);
+    if (reqAgain) {
+        // re add claim edge since the edge should still exist as it will be requested later
+        rag->addClaimEdge(person, resourceStr);
+    }
     // update graph to reallocate the resource that was just freed
     if (sz) {
         // if sz > 0 then the vertex was removed
         int resourceReallocated = rag->updateGraph(resourceStr);
-//        if (resourceReallocated) {
-//            printf("Reallocated resource %d\n", resource);
-//        }
     }
 
     printf("Person %s releases %d\n", player, resource);
@@ -142,12 +145,19 @@ void* runner(void* v) {
                 if (rag->edgeExists(to_string(resources_req[index][i]*-1), players[index])) {
                     // only release resource if the current thread has access to it
                     resourcesToHold.remove(resources_req[index][i]*-1);
-                    bool removed = release(players[index], index, resources_req[index][i]);
+
+                    // check to see if this resource will be requested again later and pass bool to release function
+                    bool reqAgain = false;
+                    for (int c = i+1; c < num_resources_req[index]; c++) {
+                        if (resources_req[index][i]*-1 == resources_req[index][c]) {
+                            reqAgain = true;
+                        }
+                    }
+
+                    bool removed = release(players[index], index, resources_req[index][i], reqAgain);
                     i++;
                 }
-
             }
-
         }
 
         // check if all resource that this thread has requested are allocated to it
@@ -175,7 +185,7 @@ void* runner(void* v) {
 
         for (auto &v: resourcesToHold) {
             if (rag->edgeExists(to_string(v), players[index])) {
-                if (release(players[index], index, v)) {
+                if (release(players[index], index, v, false)) {
                     printf("BIG RELEASE edge %s ---> %d\n", players[index], v);
                 }
             }
