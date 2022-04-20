@@ -22,7 +22,7 @@ class Graph
 {
     int V; // No. of vertices
     bool isCyclicUtil(string &v, map<string, bool> &visited, map<string, bool> &recStack);
-    map<string, list<pair<string, int>>> graph;
+    map<string, list<pair<string, int> > > graph;
     pthread_mutex_t lockRelease;
 public:
     Graph(int V); // Constructor

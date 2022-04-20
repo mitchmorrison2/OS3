@@ -57,27 +57,27 @@ include CMakeFiles/Program3.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/Program3.dir/flags.make
 
-CMakeFiles/Program3.dir/main.cpp.o: CMakeFiles/Program3.dir/flags.make
-CMakeFiles/Program3.dir/main.cpp.o: ../main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/Mitchellmorrison/CLionProjects/Program3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Program3.dir/main.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Program3.dir/main.cpp.o -c /Users/Mitchellmorrison/CLionProjects/Program3/main.cpp
+CMakeFiles/Program3.dir/base.cpp.o: CMakeFiles/Program3.dir/flags.make
+CMakeFiles/Program3.dir/base.cpp.o: ../base.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/Mitchellmorrison/CLionProjects/Program3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Program3.dir/base.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Program3.dir/base.cpp.o -c /Users/Mitchellmorrison/CLionProjects/Program3/base.cpp
 
-CMakeFiles/Program3.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Program3.dir/main.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Mitchellmorrison/CLionProjects/Program3/main.cpp > CMakeFiles/Program3.dir/main.cpp.i
+CMakeFiles/Program3.dir/base.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Program3.dir/base.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Mitchellmorrison/CLionProjects/Program3/base.cpp > CMakeFiles/Program3.dir/base.cpp.i
 
-CMakeFiles/Program3.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Program3.dir/main.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Mitchellmorrison/CLionProjects/Program3/main.cpp -o CMakeFiles/Program3.dir/main.cpp.s
+CMakeFiles/Program3.dir/base.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Program3.dir/base.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Mitchellmorrison/CLionProjects/Program3/base.cpp -o CMakeFiles/Program3.dir/base.cpp.s
 
 # Object files for target Program3
 Program3_OBJECTS = \
-"CMakeFiles/Program3.dir/main.cpp.o"
+"CMakeFiles/Program3.dir/base.cpp.o"
 
 # External object files for target Program3
 Program3_EXTERNAL_OBJECTS =
 
-Program3: CMakeFiles/Program3.dir/main.cpp.o
+Program3: CMakeFiles/Program3.dir/base.cpp.o
 Program3: CMakeFiles/Program3.dir/build.make
 Program3: CMakeFiles/Program3.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/Mitchellmorrison/CLionProjects/Program3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable Program3"

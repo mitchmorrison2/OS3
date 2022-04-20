@@ -22,8 +22,8 @@ Graph* rag;
 
 bool request(char* player, int thread, int resource) {
     // request a resource
-        // if accepted add new edge and remove claim edge
-        // else do nothing
+    // if accepted add new edge and remove claim edge
+    // else do nothing
     pthread_mutex_lock(&lockRequest);
     pthread_mutex_lock(&printLock);
 
@@ -49,9 +49,9 @@ bool request(char* player, int thread, int resource) {
         // if resource vertex DNE
         // first remove the claim edge and create assignment edge
         // if this causes a cycle
-            // revert to claim edge and reject request
+        // revert to claim edge and reject request
         // if no cycle
-            // keep allocated resource and return 1 because it was granted
+        // keep allocated resource and return 1 because it was granted
         rag->removeEdge(person, resourceStr);
         rag->addEdge(resourceStr, person, 2); // edge type is allocation edge
         if (rag->isCyclic()) {
@@ -80,7 +80,7 @@ bool request(char* player, int thread, int resource) {
 
 bool release(char* player, int requester, int resource, bool reqAgain) {
     // free resource by deleting edge
-        // check if it will be requested again to know if it needs to keep the claim edge
+    // check if it will be requested again to know if it needs to keep the claim edge
     if (resource < 0) {
         resource *= -1;
     }
@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
     // driver code for threads and file IO
     FILE* fp;
     fp = fopen(argv[1], "r");
-    
+
     if(!fp){
         printf("Can't open file\n");
         exit(1);
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
 
     // initialize graph and indicate how many resources there will be
     rag = new Graph(NUM_RESOURCES);
-    
+
     for (int i = 0; i < NUM_THREADS; i++) {
         //create global storage for players names and resource requests
         players[i] = (char*)malloc(sizeof(char)*MAX_LINE_LEN);
