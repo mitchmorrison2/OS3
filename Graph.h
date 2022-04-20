@@ -42,15 +42,12 @@ public:
 Graph::Graph(int V)
 {
     this->V = V;
-    pthread_mutex_init(&lockRelease, NULL);
+    pthread_mutex_init(&lockRelease, nullptr);
 
 }
 
 bool Graph::edgeExists(string idx, string resource) {
-// check what resources are being used by this thread and return
-// let returned function call free resource on those
-//    bool found = (find(graph[idx].begin(), graph[idx].end(), resource) != graph[idx].end());
-//    return found;
+    // check if the edge exists
     if (graph.find(idx) != graph.end()) {
         for (auto v: graph[idx]) {
             if (v.first == resource) {
@@ -62,8 +59,7 @@ bool Graph::edgeExists(string idx, string resource) {
 }
 
 bool Graph::vertexExists(string resource) {
-// check what resources are being used by this thread and return
-// let returned function call free resource on those
+    // see if resource is already in use
     for (auto v: graph) {
         if (v.first == resource) {
             return true;
@@ -76,7 +72,6 @@ void Graph::addEdge(string v, string w, int edgeType=0)
 {
     pthread_mutex_lock(&lockRelease);
     // if not causing a cycle or if resource vertex dne then add
-    // graph class add vertex
     pair<string, int> pr = make_pair(w, edgeType);
     graph[v].push_back(pr);
     pthread_mutex_unlock(&lockRelease);
@@ -102,7 +97,7 @@ void Graph::addClaimEdge(string thread, string resource, int edgeType = 0) {
 
 bool Graph::removeEdge(string v, string w) {
     pthread_mutex_lock(&lockRelease);
-    // remove edge that was for cycle detection
+    // remove edge
     size_t sz = graph[v].size();
     for (auto & r: graph[v]) {
         if (r.first == w) {
@@ -198,17 +193,25 @@ bool Graph::isCyclic()
 }
 
 char* Graph::printGraph() {
-    // how the fuck do I print this thing
-    char r2t[1000] = "Resource to Thread ";
-    char t2r[1000] = "Thread to Resources (claim edges) ";
-    char req[1000] = "Thread to Resources (request edges) ";
+    // in order for the print function to work, the name of a player CANNOT be just a number, it must be a string unique from resource numbers
 
-    for (auto v : graph)  {
+//    char r2t[1000] = "Resource to Thread ";
+//    char t2r[1000] = "Thread to Resources (claim edges) ";
+//    char req[100000] = "Thread to Resources (claim edges) ";
+    char t2r[1000] = "";
+    char req[1000] = "";
+
+    map<int, string> relations;
+
+    for (auto &v : graph)  {
         try {
+            // if it can convert the key (v.first) to an int, we know that a thread has ownership of this resource
             int res = stoi(v.first);
-            sprintf(r2t, "%s : (%s, %s) ", r2t, v.first.c_str(), v.second.front().first.c_str());
+//            sprintf(r2t, "%s : (%s, %s) ", r2t, v.first.c_str(), v.second.front().first.c_str());
+            relations[res] = v.second.front().first.c_str();
         }
         catch (exception & e) {
+            // if there is an exception, this is a claim/request edge
             for (int i = 0; i <= V; i++) {
                 pair<string, int> claimPair = make_pair(to_string(i), 0);
                 pair<string, int> reqPair = make_pair(to_string(i), 1);
@@ -217,21 +220,34 @@ char* Graph::printGraph() {
                 bool reqExists = (find(v.second.begin(), v.second.end(), reqPair) != v.second.end());
 
                 if (claimExists) {
-                    sprintf(t2r, "%s : (%s, %s) ", t2r, v.first.c_str(), to_string(i).c_str());
+                    sprintf(t2r, "%s:(%s, %s)", t2r, v.first.c_str(), to_string(i).c_str());
                 }
                 else if (reqExists) {
-                    sprintf(req, "%s : (%s, %s) ", req, v.first.c_str(), to_string(i).c_str());
+                    sprintf(req, "%s:(%s, %s)", req, v.first.c_str(), to_string(i).c_str());
                 }
             }
 
         }
 
     }
-    sprintf(r2t, "%s\n", r2t);
-    sprintf(t2r, "%s\n", t2r);
-    sprintf(req, "%s\n", req);
+    char temp[1000] = "";
+    for (auto &r: relations) {
+        sprintf(temp, "%s:(%s, %s)", temp, to_string(r.first).c_str(), r.second.c_str());
+    }
+
+    char* all[3] = {temp, t2r, req};
+    for (int i = 0; i < 3; i++) {
+        if (strlen(all[i]) < 5) {
+            char* newStr = "(-1, -1)";
+            all[i] = newStr;
+        }
+        else {
+            all[i] += 1; // shift 1 place to get rid of front leading semicolon
+        }
+    }
+
     char bigT[3000] = "";
-    sprintf(bigT, "%s%s%s", r2t, t2r, req);
+    sprintf(bigT, "%s\n%s\n%s\n", all[0], all[1], all[2]);
     return bigT;
 }
 
